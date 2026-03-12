@@ -8,8 +8,8 @@ from src.utils.datasets import split_dataset
 IMAGES = os.path.join(os.getenv("DATA_DIR"), "raw", "images")
 LABELS = os.path.join(os.getenv("DATA_DIR"), "raw", "labels")
 
-PROCESSED_IMAGES = os.path.join(os.getenv("DATA_DIR"), "processed", "images")
-PROCESSED_LABELS = os.path.join(os.getenv("DATA_DIR"), "processed", "labels")
+PROCESSED_IMAGES = os.path.join(os.getenv("DATA_DIR"), "processed", "detect", "images")
+PROCESSED_LABELS = os.path.join(os.getenv("DATA_DIR"), "processed", "detect", "labels")
 
 TEMP_IMAGES = os.path.join(PROCESSED_IMAGES, "temp")
 TEMP_LABELS = os.path.join(PROCESSED_LABELS, "temp")

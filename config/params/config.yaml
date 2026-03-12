@@ -1,0 +1,15 @@
+input:
+  image: /images/USA_99.jpg
+
+model:
+  detector: /DataSpike/src/models/prod_models/yolo/mrz_detector_v2_int8_openvino_model
+  classifier: /DataSpike/src/models/prod_models/yolo/best_classify.pt
+
+pipeline:
+  ocr: easyocr
+  checker: true
+
+run:
+  device: cpu
+  verbose: false
+  imgsz: 320

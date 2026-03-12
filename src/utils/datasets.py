@@ -90,7 +90,7 @@ def split_dataset(
         if not files:
             continue
 
-        for img_file, lbl_file in tqdm(files, desc=f"Копируем в {split}"):
+        for img_file, lbl_file in tqdm(files, desc=split):
             shutil.copy(
                 os.path.join(input_images_dir, img_file),
                 os.path.join(output_images_dir, split, img_file),
