@@ -1,9 +1,12 @@
 input:
-  image: /images/USA_99.jpg
+  images:
+    - /home/borealis/Documents/work/work_tests/DataSpike/data/raw/images/USA_99.jpg
+    - /home/borealis/Documents/work/work_tests/DataSpike/data/raw/images/USA_9.jpg
+    - /home/borealis/Documents/work/work_tests/DataSpike/data/raw/images/USA_1.jpg
 
 model:
-  detector: /DataSpike/src/models/prod_models/yolo/mrz_detector_v2_int8_openvino_model
-  classifier: /DataSpike/src/models/prod_models/yolo/best_classify.pt
+  detector: /home/borealis/Documents/work/work_tests/DataSpike/src/models/prod_models/yolo/mrz_detector_v2_int8_openvino_model
+  classifier: /home/borealis/Documents/work/work_tests/DataSpike/src/models/prod_models/yolo/best_classify.pt
 
 pipeline:
   ocr: easyocr

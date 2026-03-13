@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 
 import yaml
 
@@ -34,7 +35,6 @@ def build_pipeline(cfg: AppConfig) -> Pipeline:
     if cfg.pipeline.ocr == "tesseract":
         ocr_class = TesseractOCRReader
         ocr_kwargs = {"lang": "eng"}
-
     else:
         ocr_class = EasyOCRReader
         ocr_kwargs = {
@@ -58,6 +58,79 @@ def build_pipeline(cfg: AppConfig) -> Pipeline:
     return pipeline
 
 
+def run_pipeline(pipeline: Pipeline, cfg: AppConfig, cli_image: str | None):
+    """
+    Run pipeline continuously.
+    Image source priority:
+    1. CLI argument
+    2. Config
+    3. Interactive input
+    """
+
+    run_params = cfg.run.model_dump()
+
+    print("\nPipeline service started\n")
+
+    try:
+        # ---------- CLI IMAGE ----------
+        if cli_image:
+            try:
+                result = pipeline.run(cli_image, **run_params)
+                print(json.dumps(result, indent=2))
+
+            except Exception as e:
+                print(f"Pipeline error: {e}")
+
+        # ---------- CONFIG IMAGES ----------
+        if cfg.input and cfg.input.images:
+            for image_path in cfg.input.images:
+                print(f"\nProcessing: {image_path}")
+
+                try:
+                    result = pipeline.run(
+                        image_path,
+                        **run_params,
+                    )
+
+                    print(json.dumps(result, indent=2))
+
+                except Exception as e:
+                    print(f"Pipeline error: {e}")
+
+        # ---------- INTERACTIVE MODE ----------
+        print("\nInteractive mode started (type 'exit' to stop)\n")
+
+        while True:
+            try:
+                image_path = input("Image path: ").strip()
+            except EOFError:
+                break
+
+            if image_path.lower() in {"exit", "quit"}:
+                break
+
+            if not os.path.exists(image_path):
+                print(f"Image not found: {image_path}")
+                continue
+
+            try:
+                result = pipeline.run(
+                    image_path,
+                    **run_params,
+                )
+
+                print(json.dumps(result, indent=2))
+
+            except Exception as e:
+                print(f"Pipeline error: {e}")
+
+    except KeyboardInterrupt:
+        print("\nService interrupted")
+
+    finally:
+        print("Pipeline stopped")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="MRZ extraction and document classification pipeline"
@@ -65,13 +138,13 @@ def main():
 
     parser.add_argument(
         "--config",
-        required=True,
+        default="config/params/config.yaml",
         help="Path to YAML configuration file",
     )
 
     parser.add_argument(
         "--image",
-        help="Override image path from config",
+        help="Optional image path (overrides config)",
     )
 
     args = parser.parse_args()
@@ -79,19 +152,15 @@ def main():
     # ---------- LOAD CONFIG ----------
     cfg = load_config(args.config)
 
-    # ---------- OVERRIDE IMAGE ----------
-    image_path = args.image if args.image else str(cfg.input.image)
-
     # ---------- BUILD PIPELINE ----------
     pipeline = build_pipeline(cfg)
 
-    # ---------- RUN ----------
-    result = pipeline.run(
-        image_path,
-        **cfg.run.model_dump(),
+    # ---------- RUN SERVICE ----------
+    run_pipeline(
+        pipeline=pipeline,
+        cfg=cfg,
+        cli_image=args.image,
     )
-
-    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

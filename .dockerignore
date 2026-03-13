@@ -1,0 +1,13 @@
+**
+
+!Dockerfile
+!requirements.txt
+!main.py
+!src/**
+
+**/__pycache__/
+**/*.py[cod]
+.git/
+.venv/
+input/
+*.log

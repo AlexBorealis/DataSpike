@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
-from pydantic import BaseModel, FilePath, field_validator
+from pydantic import BaseModel, field_validator
 
 VALID_IMAGE_EXTENSIONS = {
     ".jpg",
@@ -38,23 +38,28 @@ class RunConfig(BaseModel):
 
 
 class InputConfig(BaseModel):
-    image: Path
+    images: Optional[List[str]] = None
 
-    @field_validator("image")
+    @field_validator("images")
     @classmethod
-    def validate_image(cls, v: Path):
+    def validate_image(cls, v):
+        if v is None:
+            return v
 
-        if not v.exists():
-            raise ValueError(f"Image not found: {v}")
+        for img in v:
+            path = Path(img)
 
-        if not v.is_file():
-            raise ValueError(f"Path is not a file: {v}")
+            if not path.exists():
+                raise ValueError(f"Image not found: {path}")
 
-        if v.suffix.lower() not in VALID_IMAGE_EXTENSIONS:
-            raise ValueError(
-                f"Unsupported image format: {v.suffix}. "
-                f"Supported: {', '.join(VALID_IMAGE_EXTENSIONS)}"
-            )
+            if not path.is_file():
+                raise ValueError(f"Path is not a file: {path}")
+
+            if path.suffix.lower() not in VALID_IMAGE_EXTENSIONS:
+                raise ValueError(
+                    f"Unsupported image format: {path.suffix}. "
+                    f"Supported: {', '.join(VALID_IMAGE_EXTENSIONS)}"
+                )
 
         return v
 
