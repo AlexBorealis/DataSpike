@@ -1,6 +1,4 @@
-Конечно! Вот перевод на русский и файл `Dockerfile` для сборки образа:
-
-# MRZ Extraction and Document Classification Pipeline
+# Document Classification Pipeline
 
 Этот проект предназначен для извлечения страны происхождения документа с помощью конвейера, включающего этапы
 предварительной обработки изображений, OCR (Optical Character Recognition) и классификации.
@@ -9,15 +7,17 @@
 
 1. [Начало работы](#начало-работы)
 2. [Структура проекта](#структура-проекта)
-3. [Конфигурация](#конфигурация)
-4. [Запуск конвейера](#запуск-конвейера)
-5. [Настройка Docker](#настройка-docker)
+3. [Класс Checker](#класс-Checker)
+4. [Конфигурация](#конфигурация)
+5. [Запуск конвейера](#запуск-конвейера)
+6. [Формат результата](#формат-результата)
+7. [Настройка Docker](#настройка-docker)
 
 ## Начало работы
 
 ### Требования
 
-- Python 3.8 или выше
+- Python 3.10 или выше
 - pip (Python пакетный менеджер)
 
 ### Установка
@@ -31,7 +31,7 @@
 2. Создайте виртуальное окружение и активируйте его:
    ```bash
    python -m venv .venv
-   source .venv/bin/activate  # На Windows используйте `venv\Scripts\activate`
+   source .venv/bin/activate  # На Windows используйте `.venv\Scripts\activate`
    ```
 
 3. Установите необходимые пакеты:
@@ -45,13 +45,13 @@
 
 ```
 DataSpike/
-├── src/│   
+├── src/  
 │   ├── pipeline/
 │   │   ├── __init__.py
 │   │   ├── base.py
 │   │   ├── checker.py
-│   │   ├── classifier.py
-│   │   ├── detector.py
+│   │   ├── classifier.classifier.py
+│   │   ├── detector.detector.py
 │   │   ├── ocr/
 │   │   │   ├── __init__.py
 │   │   │   ├── base.py
@@ -70,12 +70,31 @@ DataSpike/
 │       └── config.yaml
 ├── data/
 │   └──preprocessing/
+│      ├── __init__.py
 │      ├── augment_images.py
 │      └── prepare_to_classify.py
 ├── main.py
 ├── Dockerfile
 └── Makefile
 ```
+
+## Класс Checker
+
+Класс `MRZChecker` используется для исправления возможных ошибок в строках MRZ (Machine Readable Zone). Он выполняет
+следующие функции:
+
+1. **Методы проверки и исправления символов**:
+    - `char_value(c: str) -> int`: Возвращает значение символа, где буквы преобразуются в соответствующие цифры.
+    - `mrz_checksum(field: str) -> int`: Вычисляет контрольную сумму для строки MRZ.
+    - `validate_field(field: str, check_digit: str) -> bool`: Проверяет, является ли строка MRZ корректной по
+      контрольной сумме.
+    - `try_fix_field(field: str, check_digit: str) -> str`: Попытка исправить символ в строке MRZ по контрольной сумме.
+
+2. **Метод для исправления строки MRZ**:
+    - `fix_mrz(mrz_lines: list[str]) -> list[str]`: Исправляет строку MRZ TD3 (2 строки по 44 символа) на основе
+      контрольных цифр.
+
+Этот класс помогает улучшить точность распознавания
 
 ## Конфигурация
 
@@ -88,10 +107,12 @@ input:
     - /data/images/USA_99.jpg
     - /data/images/USA_9.jpg
     - /data/images/USA_1.jpg
+    - /data/images/UZB_93.jpg
+    - /data/images/UZB_90.jpg
 
 model:
-  detector: /models/mrz_detector_v2_int8_openvino_model
-  classifier: /models/best_classify.pt
+  detector: /src/models/prod_models/yolo/mrz_detector_v2_int8_openvino_model
+  classifier: /src/models/prod_models/yolo/best_classify.pt
 
 pipeline:
   ocr: easyocr
@@ -163,14 +184,13 @@ Image path: /path/to/image.jpg
 
 Pipeline возвращает JSON со следующими полями:
 
-| Поле       | Описание                                        |
-|------------|-------------------------------------------------|
-| mode       | режим работы пайплайна                          |
-| result     | определенная страна документа                   |
-| confidence | уверенность классификатора (если использовался) |
-| blur       | метрика размытия изображения                    |
-| contrast   | метрика контраста изображения                   |
-| timings    | время выполнения этапов (в миллисекундах)       |
+| Поле     | Описание                                                         |
+|----------|------------------------------------------------------------------|
+| mode     | режим работы                                                     |
+| result   | страна документа/уверенность классификатора (если использовался) |
+| blur     | метрика размытия изображения                                     |
+| contrast | метрика контраста изображения                                    |
+| timings  | время выполнения этапов (в миллисекундах)                        |
 
 ---
 
@@ -179,7 +199,10 @@ Pipeline возвращает JSON со следующими полями:
 ```json
 {
   "mode": "ocr",
-  "result": "USA",
+  "result": {
+    "country": "USA",
+    "confidence": null
+  },
   "blur": 142.51,
   "contrast": 54.32,
   "timings": {
@@ -199,8 +222,10 @@ Pipeline возвращает JSON со следующими полями:
 ```json
 {
   "mode": "classification",
-  "result": "USA",
-  "confidence": 0.97,
+  "result": {
+    "country": "USA",
+    "confidence": 0.97
+  },
   "blur": 18.4,
   "contrast": 12.3,
   "timings": {
@@ -217,8 +242,10 @@ Pipeline возвращает JSON со следующими полями:
 ```json
 {
   "mode": "classification_fallback",
-  "result": "USA",
-  "confidence": 0.91,
+  "result": {
+    "country": "USA",
+    "confidence": 0.97
+  },
   "blur": 110.2,
   "contrast": 45.8,
   "timings": {

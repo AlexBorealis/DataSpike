@@ -5,8 +5,8 @@ import os
 import yaml
 
 from src.pipeline.checker import MRZChecker
-from src.pipeline.classifier import DocumentClassifier
-from src.pipeline.detector import MRZDetector
+from src.pipeline.classifier.classifier import DocumentClassifier
+from src.pipeline.detector.detector import MRZDetector
 from src.pipeline.ocr.easyocr_ocr import EasyOCRReader
 from src.pipeline.ocr.tesseract_ocr import TesseractOCRReader
 from src.pipeline.pipeline import Pipeline

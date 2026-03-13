@@ -1,5 +1,4 @@
 import time
-from typing import Dict
 
 import cv2
 
@@ -71,19 +70,17 @@ class Pipeline:
         else:
             self.ocr = None
 
-    @staticmethod
-    def _round(value):
-        """Round float values to 2 decimal places."""
-        return round(float(value), 2)
-
-    def run(self, image_path: str, **model_kwargs):
+    def run(self, image_path: str, n: int = 2, **model_kwargs):
         """
         Run full MRZ processing pipeline.
 
         Parameters
         ----------
         image_path : str
-            Путь к изображению документа.
+            Путь к файлу изображения.
+
+        n: int (default 2)
+            Количество знаков после запятой.
 
         model_kwargs : dict
             Дополнительные параметры модели
@@ -131,15 +128,15 @@ class Pipeline:
         # ---------- READ IMAGE ----------
         t = time.perf_counter()
         img = cv2.imread(image_path)
-        timings["read_image_ms"] = self._round((time.perf_counter() - t) * 1000)
+        timings["read_image_ms"] = round((time.perf_counter() - t) * 1000, n)
 
         # ---------- QUALITY CHECK ----------
         t = time.perf_counter()
         blur, contrast = self.preprocessor.analyze_quality(img)
-        timings["quality_check_ms"] = self._round((time.perf_counter() - t) * 1000)
+        timings["quality_check_ms"] = round((time.perf_counter() - t) * 1000, n)
 
-        blur = self._round(blur)
-        contrast = self._round(contrast)
+        blur = round(blur, n)
+        contrast = round(contrast, n)
 
         # ---------- CLASSIFICATION BRANCH ----------
         if (
@@ -150,15 +147,14 @@ class Pipeline:
                 raise ValueError("Classifier not configured")
 
             t = time.perf_counter()
-            result_cls = self.classifier.classify(image_path, **model_kwargs)
-            timings["classification_ms"] = self._round((time.perf_counter() - t) * 1000)
+            result_cls = self.classifier.classify(image_path, n, **model_kwargs)
+            timings["classification_ms"] = round((time.perf_counter() - t) * 1000, n)
 
-            timings["total_ms"] = self._round((time.perf_counter() - t0) * 1000)
+            timings["total_ms"] = round((time.perf_counter() - t0) * 1000, n)
 
             return {
                 "mode": "classification",
-                "result": result_cls["country"],
-                "confidence": self._round(result_cls["confidence"]),
+                "result": result_cls,
                 "blur": blur,
                 "contrast": contrast,
                 "timings": timings,
@@ -167,12 +163,12 @@ class Pipeline:
         # ---------- MRZ DETECTION ----------
         t = time.perf_counter()
         crop = self.detector.detect(image_path, **model_kwargs)
-        timings["mrz_detection_ms"] = self._round((time.perf_counter() - t) * 1000)
+        timings["mrz_detection_ms"] = round((time.perf_counter() - t) * 1000, n)
 
         # ---------- PREPROCESS ----------
         t = time.perf_counter()
         lines = self.preprocessor.process(crop)
-        timings["preprocessing_ms"] = self._round((time.perf_counter() - t) * 1000)
+        timings["preprocessing_ms"] = round((time.perf_counter() - t) * 1000, n)
 
         # ---------- OCR ----------
         t = time.perf_counter()
@@ -188,7 +184,7 @@ class Pipeline:
 
             texts.append(text)
 
-        timings["ocr_ms"] = self._round((time.perf_counter() - t) * 1000)
+        timings["ocr_ms"] = round((time.perf_counter() - t) * 1000, n)
 
         # ---------- CHECKER ----------
         t = time.perf_counter()
@@ -196,7 +192,7 @@ class Pipeline:
         if self.checker and len(texts) == 2:
             texts = self.checker.fix_mrz(texts)
 
-        timings["postprocess_ms"] = self._round((time.perf_counter() - t) * 1000)
+        timings["postprocess_ms"] = round((time.perf_counter() - t) * 1000, n)
 
         mrz_text = "\n".join(texts)
 
@@ -205,25 +201,24 @@ class Pipeline:
         # ---------- OCR FAILED → FALLBACK ----------
         if country is None and self.classifier:
             t = time.perf_counter()
-            result_cls = self.classifier.classify(image_path, **model_kwargs)
-            timings["classification_ms"] = self._round((time.perf_counter() - t) * 1000)
+            result_cls = self.classifier.classify(image_path, n, **model_kwargs)
+            timings["classification_ms"] = round((time.perf_counter() - t) * 1000, n)
 
-            timings["total_ms"] = self._round((time.perf_counter() - t0) * 1000)
+            timings["total_ms"] = round((time.perf_counter() - t0) * 1000, n)
 
             return {
                 "mode": "classification_fallback",
-                "result": result_cls["country"],
-                "confidence": self._round(result_cls["confidence"]),
+                "result": result_cls,
                 "blur": blur,
                 "contrast": contrast,
                 "timings": timings,
             }
 
-        timings["total_ms"] = self._round((time.perf_counter() - t0) * 1000)
+        timings["total_ms"] = round((time.perf_counter() - t0) * 1000, n)
 
         return {
             "mode": "ocr",
-            "result": country,
+            "result": {"country": country, "confidence": None},
             "blur": blur,
             "contrast": contrast,
             "timings": timings,

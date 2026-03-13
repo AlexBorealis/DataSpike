@@ -3,6 +3,8 @@ input:
     - /data/raw/images/USA_99.jpg
     - /data/raw/images/USA_9.jpg
     - /data/raw/images/USA_1.jpg
+    - /data/raw/images/UZB_93.jpg
+    - /data/raw/images/UZB_90.jpg
 
 model:
   detector: /src/models/prod_models/yolo/mrz_detector_v2_int8_openvino_model
