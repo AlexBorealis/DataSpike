@@ -138,7 +138,7 @@ def main():
 
     parser.add_argument(
         "--config",
-        default="config/params/config.yaml",
+        required=True,
         help="Path to YAML configuration file",
     )
 

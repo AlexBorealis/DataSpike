@@ -31,7 +31,7 @@
 2. Создайте виртуальное окружение и активируйте его:
    ```bash
    python -m venv .venv
-   source venv/bin/activate  # На Windows используйте `venv\Scripts\activate`
+   source .venv/bin/activate  # На Windows используйте `venv\Scripts\activate`
    ```
 
 3. Установите необходимые пакеты:
@@ -44,9 +44,8 @@
 Проект организован следующим образом:
 
 ```
-mrz-extraction/
-├── src/
-│   ├── main.py
+DataSpike/
+├── src/│   
 │   ├── pipeline/
 │   │   ├── __init__.py
 │   │   ├── base.py
@@ -70,12 +69,10 @@ mrz-extraction/
 │   └── params/
 │       └── config.yaml
 ├── data/
-│   ├── preprocessing/
-│   │   ├── augment_images.py
-│   │   └── prepare_to_classify.py
-│   └── raw/
-│       ├── images/
-│       └── labels/
+│   └──preprocessing/
+│      ├── augment_images.py
+│      └── prepare_to_classify.py
+├── main.py
 ├── Dockerfile
 └── Makefile
 ```
