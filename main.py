@@ -3,6 +3,7 @@ import json
 import os
 
 import yaml
+from dotenv import load_dotenv
 
 from src.pipeline.checker import MRZChecker
 from src.pipeline.classifier.classifier import DocumentClassifier
@@ -19,12 +20,35 @@ def load_config(config_path: str) -> AppConfig:
     with open(config_path, "r") as f:
         raw_config = yaml.safe_load(f)
 
+    load_dotenv(dotenv_path="config/envs/.env")
+    source_dir = os.getenv("SOURCE_DIR", "")
+    data_dir = os.getenv("DATA_DIR", "")
+
+    # Модифицируем пути моделей
+    if "model" in raw_config:
+        raw_config["model"]["detector"] = os.path.join(
+            source_dir, str(raw_config["model"]["detector"]).lstrip("/")
+        )
+        raw_config["model"]["classifier"] = os.path.join(
+            source_dir, str(raw_config["model"]["classifier"]).lstrip("/")
+        )
+
+    # ИСПРАВЛЕНИЕ: Добавляем проверку "if raw_config["input"]["images"]"
+    if "input" in raw_config and raw_config["input"].get("images"):
+        raw_config["input"]["images"] = [
+            os.path.join(data_dir, str(img).lstrip("/"))
+            for img in raw_config["input"]["images"]
+        ]
+    else:
+        # Если картинок нет, гарантируем, что Pydantic получит пустой список, а не None
+        if "input" in raw_config:
+            raw_config["input"]["images"] = []
+
     return AppConfig(**raw_config)
 
 
 def build_pipeline(cfg: AppConfig) -> Pipeline:
     """Create pipeline from config."""
-
     detector = MRZDetector(str(cfg.model.detector))
     classifier = DocumentClassifier(str(cfg.model.classifier))
 
@@ -88,7 +112,7 @@ def run_pipeline(pipeline: Pipeline, cfg: AppConfig, cli_image: str | None):
 
                 try:
                     result = pipeline.run(
-                        image_path,
+                        os.path.join(os.getenv("DATA_DIR"), image_path),
                         **run_params,
                     )
 

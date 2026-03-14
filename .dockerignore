@@ -4,6 +4,7 @@
 !requirements.txt
 !main.py
 !src/**
+!config/params/**
 
 **/__pycache__/
 **/*.py[cod]

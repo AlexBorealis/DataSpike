@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps htop vim curl wget net-tools iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /
 
 RUN python3 -m venv /home/appuser/.venv
 ENV PATH="/home/appuser/.venv/bin:$PATH" \
@@ -15,13 +15,15 @@ ENV PATH="/home/appuser/.venv/bin:$PATH" \
     PYTHONPATH=/
 
 # install python dependencies
-COPY requirements.txt .
-
-RUN pip install --no-cache-dir -r requirements.txt
+ARG PYTORCH_WHL_INDEX=https://download.pytorch.org/whl/cu124
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --extra-index-url ${PYTORCH_WHL_INDEX} -r requirements.txt
 
 # copy application
-COPY main.py .
+COPY main.py ./
 COPY src ./src
+COPY config/params ./config
 
 # run service
-CMD ["python", "-m", "main"]
+CMD ["python", "-m", "main", "--config", "/config/config.yaml"]

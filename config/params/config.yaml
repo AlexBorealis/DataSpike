@@ -1,17 +1,17 @@
 input:
   images:
-    - /data/raw/images/USA_99.jpg
-    - /data/raw/images/USA_9.jpg
-    - /data/raw/images/USA_1.jpg
-    - /data/raw/images/UZB_93.jpg
-    - /data/raw/images/UZB_90.jpg
+    - /raw/images/USA_99.jpg
+    - /raw/images/BLR_99.jpg
+    - /raw/images/MEX_99.jpg
+    - /raw/images/BGR_99.jpg
+    - /raw/images/ITA_99.jpg
 
 model:
   detector: /src/models/prod_models/yolo/mrz_detector_v2_int8_openvino_model
   classifier: /src/models/prod_models/yolo/best_classify.pt
 
 pipeline:
-  ocr: easyocr
+  ocr: tesseract
   checker: true
 
 run:
