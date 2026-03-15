@@ -7,7 +7,10 @@ build:
 run:
 	docker run --rm -it \
 		--name $(CONTAINER_NAME) \
-		-v $(PWD)/config/params:/config \
+		-e DATA_DIR=/app \
+		-e SOURCE_DIR=/app \
+		-v $(PWD)/config/params:/app/config \
+		-v $(PWD)/input:/app/input \
 		$(IMAGE_NAME)
 
 start: build run
@@ -15,7 +18,10 @@ start: build run
 shell:
 	docker run --rm -it \
 		--name $(CONTAINER_NAME) \
-		-v $(PWD)/config/params:/config \
+		-e DATA_DIR=/app \
+		-e SOURCE_DIR=/app \
+		-v $(PWD)/config/params:/app/config \
+		-v $(PWD)/input:/app/input \
 		--entrypoint bash \
 		$(IMAGE_NAME)
 

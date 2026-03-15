@@ -6,13 +6,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps htop vim curl wget net-tools iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /
+WORKDIR /app
 
-RUN python3 -m venv /home/appuser/.venv
+# Настройка путей и окружения
 ENV PATH="/home/appuser/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/
+    PYTHONPATH=/app \
+    SOURCE_DIR=/app \
+    DATA_DIR=/app/input
 
 # install python dependencies
 ARG PYTORCH_WHL_INDEX=https://download.pytorch.org/whl/cu124
@@ -26,4 +28,4 @@ COPY src ./src
 COPY config/params ./config
 
 # run service
-CMD ["python", "-m", "main", "--config", "/config/config.yaml"]
+CMD ["python", "-m", "main", "--config", "config/config.yaml"]

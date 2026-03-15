@@ -1,10 +1,10 @@
 input:
   images:
-    - /raw/images/USA_99.jpg
-    - /raw/images/BLR_99.jpg
-    - /raw/images/MEX_99.jpg
-    - /raw/images/BGR_99.jpg
-    - /raw/images/ITA_99.jpg
+    - input/BEL_11.jpg
+    - input/BLR_29.jpg
+    - input/UZB_83.jpg
+    - input/UZB_94.jpg
+    - input/BLR_6.jpg
 
 model:
   detector: /src/models/prod_models/yolo/mrz_detector_v2_int8_openvino_model

@@ -9,3 +9,4 @@ scikit-learn
 tqdm
 albumentations
 dotenv
+openvino>=2024.0.0

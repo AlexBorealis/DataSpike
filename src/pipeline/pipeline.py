@@ -7,13 +7,13 @@ from src.utils.utils import extract_country_from_mrz
 
 class Pipeline:
     def __init__(
-        self,
-        detector,
-        preprocessor=None,
-        ocr=None,
-        classifier=None,
-        ocr_kwargs=None,
-        checker=None,
+            self,
+            detector,
+            preprocessor=None,
+            ocr=None,
+            classifier=None,
+            ocr_kwargs=None,
+            checker=None,
     ):
         """
         MRZ processing pipeline.
@@ -96,6 +96,7 @@ class Pipeline:
             OCR режим:
             {
                 "mode": "ocr",
+                "image_path": ...,
                 "result": "USA",
                 "blur": float,
                 "contrast": float,
@@ -105,6 +106,7 @@ class Pipeline:
             Классификация:
             {
                 "mode": "classification",
+                "image_path": ...,
                 "result": "USA",
                 "confidence": float,
                 "blur": float,
@@ -115,6 +117,7 @@ class Pipeline:
             Fallback классификация:
             {
                 "mode": "classification_fallback",
+                "image_path": ...,
                 "result": "USA",
                 "confidence": float,
                 "blur": float,
@@ -140,8 +143,8 @@ class Pipeline:
 
         # ---------- CLASSIFICATION BRANCH ----------
         if (
-            blur < self.preprocessor.BLUR_THRESHOLD
-            or contrast < self.preprocessor.CONTRAST_THRESHOLD
+                blur < self.preprocessor.BLUR_THRESHOLD
+                or contrast < self.preprocessor.CONTRAST_THRESHOLD
         ):
             if not self.classifier:
                 raise ValueError("Classifier not configured")
@@ -154,6 +157,7 @@ class Pipeline:
 
             return {
                 "mode": "classification",
+                "image_path": image_path,
                 "result": result_cls,
                 "blur": blur,
                 "contrast": contrast,
@@ -208,6 +212,7 @@ class Pipeline:
 
             return {
                 "mode": "classification_fallback",
+                "image_path": image_path,
                 "result": result_cls,
                 "blur": blur,
                 "contrast": contrast,
@@ -218,6 +223,7 @@ class Pipeline:
 
         return {
             "mode": "ocr",
+            "image_path": image_path,
             "result": {"country": country, "confidence": None},
             "blur": blur,
             "contrast": contrast,
