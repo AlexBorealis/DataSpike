@@ -2,18 +2,18 @@ import time
 
 import cv2
 
-from src.utils.utils import extract_country_from_mrz
+from src.utils.mrz import extract_country_from_mrz
 
 
 class Pipeline:
     def __init__(
-            self,
-            detector,
-            preprocessor=None,
-            ocr=None,
-            classifier=None,
-            ocr_kwargs=None,
-            checker=None,
+        self,
+        detector,
+        preprocessor=None,
+        ocr=None,
+        classifier=None,
+        ocr_kwargs=None,
+        checker=None,
     ):
         """
         MRZ processing pipeline.
@@ -143,8 +143,8 @@ class Pipeline:
 
         # ---------- CLASSIFICATION BRANCH ----------
         if (
-                blur < self.preprocessor.BLUR_THRESHOLD
-                or contrast < self.preprocessor.CONTRAST_THRESHOLD
+            blur < self.preprocessor.BLUR_THRESHOLD
+            or contrast < self.preprocessor.CONTRAST_THRESHOLD
         ):
             if not self.classifier:
                 raise ValueError("Classifier not configured")

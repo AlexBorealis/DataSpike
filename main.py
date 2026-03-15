@@ -1,6 +1,133 @@
 import argparse
+import json
+import os
+from typing import Optional
 
-from src.utils.utils import build_pipeline, load_config, run_pipeline
+from src.pipeline.checker import MRZChecker
+from src.pipeline.classifier.classifier import DocumentClassifier
+from src.pipeline.detector.detector import MRZDetector
+from src.pipeline.ocr.easyocr_ocr import EasyOCRReader
+from src.pipeline.ocr.tesseract_ocr import TesseractOCRReader
+from src.pipeline.pipeline import Pipeline
+from src.pipeline.preprocessor import MRZPreprocessor
+from src.serializers.serializers import AppConfig
+from src.utils.utils import load_config, resolve_image_path
+
+
+def build_pipeline(cfg: AppConfig) -> Pipeline:
+    """Create pipeline from config."""
+    detector = MRZDetector(str(cfg.model.detector))
+    classifier = DocumentClassifier(str(cfg.model.classifier))
+
+    preprocessor = MRZPreprocessor()
+
+    checker = MRZChecker() if cfg.pipeline.checker else None
+
+    if cfg.pipeline.ocr == "tesseract":
+        ocr_class = TesseractOCRReader
+        ocr_kwargs = {"lang": "eng"}
+    else:
+        ocr_class = EasyOCRReader
+        ocr_kwargs = {
+            "min_size": 10,
+            "contrast_ths": 0.05,
+            "adjust_contrast": 0.5,
+            "text_threshold": 0.4,
+            "low_text": 0.3,
+            "beamWidth": 5,
+        }
+
+    pipeline = Pipeline(
+        detector=detector,
+        preprocessor=preprocessor,
+        ocr=ocr_class,
+        ocr_kwargs=ocr_kwargs,
+        checker=checker,
+        classifier=classifier,
+    )
+
+    return pipeline
+
+
+def run_pipeline(pipeline: Pipeline, cfg: AppConfig, cli_image: Optional[str]):
+    """
+    Run pipeline continuously.
+    Image source priority:
+    1. CLI argument
+    2. Config
+    3. Interactive input
+    """
+
+    run_params = cfg.run.model_dump()
+    data_dir = os.getenv("DATA_DIR", "")
+
+    print("\nPipeline service started\n")
+
+    try:
+        # ---------- CLI IMAGE ----------
+        if cli_image:
+            try:
+                result = pipeline.run(cli_image, **run_params)
+                print(json.dumps(result, indent=2))
+
+            except Exception as e:
+                print(f"Pipeline error: {e}")
+
+        # ---------- CONFIG IMAGES ----------
+        if cfg.input and cfg.input.images:
+            for image_path in cfg.input.images:
+                print(f"\nProcessing: {image_path}")
+
+                try:
+                    result = pipeline.run(
+                        image_path,
+                        **run_params,
+                    )
+
+                    print(json.dumps(result, indent=2))
+
+                except Exception as e:
+                    print(f"Pipeline error: {e}")
+
+        # ---------- INTERACTIVE MODE ----------
+        print("\nInteractive mode started (type 'exit' to stop)\n")
+
+        while True:
+            try:
+                image_path = input("Image path: ").strip()
+            except EOFError:
+                break
+
+            if image_path.lower() in {"exit", "quit"}:
+                break
+
+            if not os.path.exists(image_path):
+                resolved_image_path = resolve_image_path(image_path, data_dir=data_dir)
+
+                if not resolved_image_path:
+                    print(f"Image not found: {image_path}")
+                    continue
+
+                try:
+                    result = pipeline.run(
+                        resolved_image_path,
+                        **run_params,
+                    )
+
+                    print(json.dumps(result, indent=2))
+
+                except Exception as e:
+                    import traceback
+
+                    traceback.print_exc()
+
+                    print(f"Pipeline error: {e}")
+
+    except KeyboardInterrupt:
+        print("\nService interrupted")
+
+    finally:
+        print("Pipeline stopped")
 
 
 def main():
