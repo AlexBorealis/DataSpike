@@ -1,15 +1,19 @@
-FROM python:3.10-slim
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 # system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip \
     tesseract-ocr libgl1 libglib2.0-0 \
     procps htop vim curl wget net-tools iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
+# Делаем python3 командой по умолчанию (чтобы работал pip и python)
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 WORKDIR /app
 
 # Настройка путей и окружения
-ENV PATH="/home/appuser/.venv/bin:$PATH" \
+ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
@@ -19,8 +23,8 @@ ENV PATH="/home/appuser/.venv/bin:$PATH" \
 # install python dependencies
 ARG PYTORCH_WHL_INDEX=https://download.pytorch.org/whl/cu124
 COPY requirements.txt ./
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --extra-index-url ${PYTORCH_WHL_INDEX} -r requirements.txt
+RUN python -m pip install --no-cache-dir --upgrade pip && \
+    python -m pip install --no-cache-dir --extra-index-url ${PYTORCH_WHL_INDEX} -r requirements.txt
 
 # copy application
 COPY main.py ./

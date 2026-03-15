@@ -5,9 +5,13 @@ input:
     - input/UZB_83.jpg
     - input/UZB_94.jpg
     - input/BLR_6.jpg
+    - input/BLR_26.jpg
+    - input/BLR_29.jpg
+    - input/UZB_92.jpg
+    - input/UZB_93.jpg
 
 model:
-  detector: /src/models/prod_models/yolo/mrz_detector_v2_int8_openvino_model
+  detector: /src/models/prod_models/yolo/mrz_detector_v2_openvino_model
   classifier: /src/models/prod_models/yolo/best_classify.pt
 
 pipeline:
@@ -15,6 +19,7 @@ pipeline:
   checker: true
 
 run:
-  device: cpu
+  device: cuda
   verbose: false
-  imgsz: 320
+  imgsz: 640
+  batch_size: 8

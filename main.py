@@ -112,7 +112,7 @@ def run_pipeline(pipeline: Pipeline, cfg: AppConfig, cli_image: str | None):
 
                 try:
                     result = pipeline.run(
-                        os.path.join(os.getenv("DATA_DIR"), image_path),
+                        image_path,
                         **run_params,
                     )
 
@@ -146,6 +146,9 @@ def run_pipeline(pipeline: Pipeline, cfg: AppConfig, cli_image: str | None):
                 print(json.dumps(result, indent=2))
 
             except Exception as e:
+                import traceback
+                traceback.print_exc()
+
                 print(f"Pipeline error: {e}")
 
     except KeyboardInterrupt:

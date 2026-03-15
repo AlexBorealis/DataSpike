@@ -283,43 +283,86 @@ Ctrl+C
 ## Настройка Docker
 
 ### Docker
+Ниже приведены актуальные команды из текущих `Dockerfile` и `Makefile`.
 
 ```
+### 1) Сборка образа
 
+```bash
 docker build -t dataspike .
 
 ```
 
 ### Запуск контейнера
+### 2) Запуск сервиса в контейнере
 
+```bash
+docker run --rm -it \
+  --name dataspike_service \
+  -v $(PWD)/config:/config \
+  dataspike
 ```
 
 docker run \
 -v $(pwd):/app \
 dataspike
+Контейнер запускает команду по умолчанию из `Dockerfile`:
 
+```bash
+python -m main --config /config/params/config.yaml
 ```
 
 ### Makefile
+### 3) Запуск интерактивной shell-сессии
+
+```bash
+docker run --rm -it \
+  --name dataspike_service_shell \
+  -v $(PWD)/config:/config \
+  --entrypoint bash \
+  dataspike
+```
 
 `Makefile` содержит цели для сборки и запуска образа Docker.
+### 4) Использование Makefile
 
 ```makefile
 # Сборка образа Docker
 docker-build:
 	docker build -t dataspike .
+Актуальные цели:
 
 # Запуск контейнера Docker
 docker-run:
 	docker run --rm -v $(PWD):/app -w /app dataspike python -m main --config config/params/config.yaml
+	
+```
+make build   # только сборка образа
+make run     # только запуск контейнера
+make start   # build + run
+make shell   # shell внутри контейнера
+make stop    # остановка контейнера dataspike_service
+make clean   # удаление образа dataspike
+
 ```
 
 Этот набор позволяет легко управлять вашим проектом и запускать его в стабильной среде с использованием Docker.
+### 5) Примечание по PyTorch индексу
 
 Упрощённые команды:
+В `Dockerfile` используется `ARG PYTORCH_WHL_INDEX` для корректной установки CUDA-колёс PyTorch при необходимости (например, `torch==...+cu124`).
+По умолчанию:
 
+```bash
+https://download.pytorch.org/whl/cu124
 ```
 make build
 make run
 make shell
+```
+
+При необходимости индекс можно переопределить при сборке:
+
+```bash
+docker build --build-arg PYTORCH_WHL_INDEX=https://download.pytorch.org/whl/cpu -t dataspike .
 ```

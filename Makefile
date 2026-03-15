@@ -7,6 +7,7 @@ build:
 run:
 	docker run --rm -it \
 		--name $(CONTAINER_NAME) \
+		--gpus all --cpus=6 --memory=6g \
 		-e DATA_DIR=/app \
 		-e SOURCE_DIR=/app \
 		-v $(PWD)/config/params:/app/config \
@@ -16,14 +17,7 @@ run:
 start: build run
 
 shell:
-	docker run --rm -it \
-		--name $(CONTAINER_NAME) \
-		-e DATA_DIR=/app \
-		-e SOURCE_DIR=/app \
-		-v $(PWD)/config/params:/app/config \
-		-v $(PWD)/input:/app/input \
-		--entrypoint bash \
-		$(IMAGE_NAME)
+	docker exec -it $(CONTAINER_NAME) bash
 
 stop:
 	docker stop $(CONTAINER_NAME)
