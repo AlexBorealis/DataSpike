@@ -8,10 +8,10 @@
 1. [Начало работы](#начало-работы)
 2. [Структура проекта](#структура-проекта)
 3. [Класс Checker](#класс-Checker)
-4. [Конфигурация](#конфигурация)
-5. [Запуск конвейера](#запуск-конвейера)
-6. [Формат результата](#формат-результата)
-7. [Настройка Docker](#настройка-docker)
+4. [Конфиг](#конфиг)
+5. [Запуск пайплайна](#запуск-пайплайна)
+6. [Результат](#результат)
+7. [Makefile](#makefile)
 
 ## Начало работы
 
@@ -48,21 +48,21 @@ DataSpike/
 ├── src/  
 │   ├── pipeline/
 │   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── checker.py
+│   │   ├── preprocessor.py
 │   │   ├── classifier.classifier.py
 │   │   ├── detector.detector.py
-│   │   ├── ocr/
-│   │   │   ├── __init__.py
-│   │   │   ├── base.py
-│   │   │   ├── easyocr_ocr.py
-│   │   │   └── tesseract_ocr.py
-│   │   ├── preprocessor.py
-│   │   └── pipeline.py
+│   │   ├── pipeline.py
+│   │   └── ocr/
+│   │      ├── __init__.py
+│   │      ├── base.py
+│   │      ├── checker.py
+│   │      ├── easyocr_ocr.py
+│   │      └── tesseract_ocr.py
 │   ├── serializers/
 │   │   ├── __init__.py
 │   │   └── serializers.py
 │   └── utils/
+│       ├── __init__.py
 │       ├── datasets.py
 │       └── utils.py
 ├── config/
@@ -72,15 +72,20 @@ DataSpike/
 │   └──preprocessing/
 │      ├── __init__.py
 │      ├── augment_images.py
+│      ├── augmentations.py
 │      └── prepare_to_classify.py
 ├── main.py
+├── .gitignore
+├── .dockerignore
+├── requirements.txt
 ├── Dockerfile
 └── Makefile
 ```
 
-## Класс Checker
+## [Класс Checker](src/pipeline/ocr/checker.py)
 
-Класс `MRZChecker` используется для исправления возможных ошибок в строках MRZ (Machine Readable Zone). Он выполняет
+Класс `MRZChecker` используется для исправления возможных ошибок в строках MRZ (Machine
+Readable Zone). Он выполняет
 следующие функции:
 
 1. **Методы проверки и исправления символов**:
@@ -96,22 +101,26 @@ DataSpike/
 
 Этот класс помогает улучшить точность распознавания
 
-## Конфигурация
+## [Конфиг](config)
 
-Конфигурация хранится в файле `config/params/config.yaml`. Вы можете изменить этот файл для изменения путей к моделям,
+Конфиг хранится в папке `config`. Вы можете изменить этот файл для изменения путей к моделям,
 входному изображению и других параметров.
 
 ```yaml
 input:
   images:
-    - /data/images/USA_99.jpg
-    - /data/images/USA_9.jpg
-    - /data/images/USA_1.jpg
-    - /data/images/UZB_93.jpg
-    - /data/images/UZB_90.jpg
+    - input/BEL_11.jpg
+    - input/BLR_29.jpg
+    - input/UZB_83.jpg
+    - input/UZB_94.jpg
+    - input/BLR_6.jpg
+    - input/BLR_26.jpg
+    - input/BLR_29.jpg
+    - input/UZB_92.jpg
+    - input/UZB_93.jpg
 
 model:
-  detector: /src/models/prod_models/yolo/mrz_detector_v2_int8_openvino_model
+  detector: /src/models/prod_models/yolo/mrz_detector_v2_openvino_model
   classifier: /src/models/prod_models/yolo/best_classify.pt
 
 pipeline:
@@ -119,12 +128,13 @@ pipeline:
   checker: true
 
 run:
-  device: cpu
+  device: cuda
   verbose: false
-  imgsz: 320
+  imgsz: 640
+  batch_size: 8
 ```
 
-## Запуск конвейера
+## Запуск пайплайна
 
 ### Обычный запуск
 
@@ -142,6 +152,8 @@ python -m main --config config/params/config.yaml
 Image path:
 ```
 
+## При запуске сервиса в контейнере нужно указывать такой путь к изображению `app/input/image_name.jpg`
+
 ### Переопределение изображения
 
 ```bash
@@ -150,7 +162,7 @@ python -m main --config config/params/config.yaml --image /path/to/new/image.jpg
 
 CLI аргумент имеет приоритет над конфигом.
 
-## Интерактивный режим
+### Интерактивный режим
 
 После обработки конфигурации сервис ожидает новые изображения:
 
@@ -159,8 +171,6 @@ Image path: /path/to/image.jpg
 ```
 
 ## Результат
-
-## Результат выполнения пайплайна
 
 После запуска сервис выполняет полный конвейер обработки MRZ (Machine Readable Zone) документа
 и возвращает структурированный JSON-ответ с результатом определения страны документа.
@@ -280,89 +290,51 @@ Ctrl+C
 
 ```
 
-## Настройка Docker
+### [Makefile](Makefile)
 
-### Docker
-Ниже приведены актуальные команды из текущих `Dockerfile` и `Makefile`.
+`Makefile` содержит команды для быстрой сборки и запуска образа Docker.
 
-```
-### 1) Сборка образа
-
-```bash
-docker build -t dataspike .
-
-```
-
-### Запуск контейнера
-### 2) Запуск сервиса в контейнере
-
-```bash
-docker run --rm -it \
-  --name dataspike_service \
-  -v $(PWD)/config:/config \
-  dataspike
-```
-
-docker run \
--v $(pwd):/app \
-dataspike
-Контейнер запускает команду по умолчанию из `Dockerfile`:
-
-```bash
-python -m main --config /config/params/config.yaml
-```
-
-### Makefile
-### 3) Запуск интерактивной shell-сессии
-
-```bash
-docker run --rm -it \
-  --name dataspike_service_shell \
-  -v $(PWD)/config:/config \
-  --entrypoint bash \
-  dataspike
-```
-
-`Makefile` содержит цели для сборки и запуска образа Docker.
-### 4) Использование Makefile
+### 3) Использование Makefile
 
 ```makefile
-# Сборка образа Docker
-docker-build:
-	docker build -t dataspike .
-Актуальные цели:
+IMAGE_NAME=dataspike
+CONTAINER_NAME=dataspike_service
 
-# Запуск контейнера Docker
-docker-run:
-	docker run --rm -v $(PWD):/app -w /app dataspike python -m main --config config/params/config.yaml
-	
+build:
+	docker build -t $(IMAGE_NAME) .
+
+run:
+	docker run --rm -it \
+		--name $(CONTAINER_NAME) \
+		--gpus all --cpus=6 --memory=6g \
+		-e DATA_DIR=/app \
+		-e SOURCE_DIR=/app \
+		-v $(PWD)/config/params:/app/config \
+		-v $(PWD)/input:/app/input \
+		$(IMAGE_NAME)
+
+start: build run
+
+shell:
+	docker exec -it $(CONTAINER_NAME) bash
+
+stop:
+	docker stop $(CONTAINER_NAME)
+
+clean:
+	-docker rmi -f $(IMAGE_NAME)
+	docker system prune -a --volumes -f
+
+.PHONY: build run start stop clean
 ```
-make build   # только сборка образа
-make run     # только запуск контейнера
-make start   # build + run
-make shell   # shell внутри контейнера
-make stop    # остановка контейнера dataspike_service
-make clean   # удаление образа dataspike
 
+```
+make build # только сборка образа
+make run # только запуск контейнера
+make start # build + run
+make shell # shell внутри контейнера
+make stop # остановка контейнера dataspike_service
+make clean # удаление образа dataspike
 ```
 
 Этот набор позволяет легко управлять вашим проектом и запускать его в стабильной среде с использованием Docker.
-### 5) Примечание по PyTorch индексу
-
-Упрощённые команды:
-В `Dockerfile` используется `ARG PYTORCH_WHL_INDEX` для корректной установки CUDA-колёс PyTorch при необходимости (например, `torch==...+cu124`).
-По умолчанию:
-
-```bash
-https://download.pytorch.org/whl/cu124
-```
-make build
-make run
-make shell
-```
-
-При необходимости индекс можно переопределить при сборке:
-
-```bash
-docker build --build-arg PYTORCH_WHL_INDEX=https://download.pytorch.org/whl/cpu -t dataspike .
-```

@@ -3,9 +3,9 @@ import json
 import os
 from typing import Optional
 
-from src.pipeline.checker import MRZChecker
 from src.pipeline.classifier.classifier import DocumentClassifier
 from src.pipeline.detector.detector import MRZDetector
+from src.pipeline.ocr.checker import MRZChecker
 from src.pipeline.ocr.easyocr_ocr import EasyOCRReader
 from src.pipeline.ocr.tesseract_ocr import TesseractOCRReader
 from src.pipeline.pipeline import Pipeline
