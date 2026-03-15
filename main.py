@@ -5,7 +5,6 @@ from typing import Optional
 
 from src.pipeline.classifier.classifier import DocumentClassifier
 from src.pipeline.detector.detector import MRZDetector
-from src.pipeline.ocr.checker import MRZChecker
 from src.pipeline.ocr.easyocr_ocr import EasyOCRReader
 from src.pipeline.ocr.tesseract_ocr import TesseractOCRReader
 from src.pipeline.pipeline import Pipeline
@@ -20,8 +19,6 @@ def build_pipeline(cfg: AppConfig) -> Pipeline:
     classifier = DocumentClassifier(str(cfg.model.classifier))
 
     preprocessor = MRZPreprocessor()
-
-    checker = MRZChecker() if cfg.pipeline.checker else None
 
     if cfg.pipeline.ocr == "tesseract":
         ocr_class = TesseractOCRReader
@@ -42,7 +39,6 @@ def build_pipeline(cfg: AppConfig) -> Pipeline:
         preprocessor=preprocessor,
         ocr=ocr_class,
         ocr_kwargs=ocr_kwargs,
-        checker=checker,
         classifier=classifier,
     )
 
