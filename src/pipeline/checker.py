@@ -51,6 +51,9 @@ class MRZChecker:
 
         line1, line2 = mrz_lines
 
+        if len(line2) < 43:
+            return mrz_lines
+
         # разбор второй строки на поля
         passport_number = line2[0:9]
         passport_cd = line2[9]
