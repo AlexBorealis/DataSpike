@@ -54,7 +54,6 @@ DataSpike/
 │   │   └── ocr/
 │   │      ├── __init__.py
 │   │      ├── base.py
-│   │      ├── checker.py
 │   │      ├── easyocr_ocr.py
 │   │      └── tesseract_ocr.py
 │   ├── serializers/
