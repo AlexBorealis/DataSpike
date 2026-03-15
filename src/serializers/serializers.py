@@ -36,7 +36,7 @@ class RunConfig(BaseModel):
     device: Literal["cpu", "cuda"] = "cpu"
     verbose: bool = False
     imgsz: int = 640
-    batch_size: int = 8
+    batch: int = 8
 
 
 class InputConfig(BaseModel):

@@ -22,4 +22,4 @@ run:
   device: cuda
   verbose: false
   imgsz: 640
-  batch_size: 8
+  batch: 8
