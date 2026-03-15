@@ -2,7 +2,7 @@ import time
 
 import cv2
 
-from src.utils.mrz import extract_country_from_mrz
+from src.utils.utils import extract_country_from_mrz
 
 
 class Pipeline:
