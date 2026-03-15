@@ -15,7 +15,7 @@ model:
   classifier: /src/models/prod_models/yolo/best_classify.pt
 
 pipeline:
-  ocr: tesseract
+  ocr: easyocr
   checker: true
 
 run:
