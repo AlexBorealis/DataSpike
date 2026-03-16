@@ -22,7 +22,7 @@ ENV PATH="/app/.venv/bin:$PATH" \
 
 # install python dependencies
 ARG PYTORCH_WHL_INDEX=https://download.pytorch.org/whl/cu124
-COPY requirements.txt ./
+COPY requirements/requirements.txt ./
 RUN python -m pip install --no-cache-dir --upgrade pip && \
     python -m pip install --no-cache-dir --extra-index-url ${PYTORCH_WHL_INDEX} -r requirements.txt
 

@@ -1,7 +1,7 @@
 **
 
 !Dockerfile
-!requirements.txt
+!requirements/requirements.txt
 !main.py
 !src/**
 !config/params/**
