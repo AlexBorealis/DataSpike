@@ -35,7 +35,7 @@
 
 3. Установите необходимые пакеты:
    ```bash
-   pip install -r requirements.txt
+   pip install -r requirements/requirements.txt
    ```
 
 ## Структура проекта
